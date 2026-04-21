@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.env
+!.env.example
+*.egg-info/
+dist/
+build/
+.venv/
+docker-compose.override.yml

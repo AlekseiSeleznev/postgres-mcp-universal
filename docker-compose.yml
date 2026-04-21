@@ -1,0 +1,20 @@
+services:
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    image: pg-mcp-gateway
+    container_name: pg-mcp-gateway
+    ports:
+      - "${PG_MCP_PORT:-8090}:${PG_MCP_PORT:-8090}"
+    volumes:
+      - gw-data:/data
+      - ./.env:/app/.env:ro
+    env_file:
+      - .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: always
+
+volumes:
+  gw-data:

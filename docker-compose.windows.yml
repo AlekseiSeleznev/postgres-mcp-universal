@@ -1,0 +1,5 @@
+# Legacy compatibility override.
+# Legacy compatibility file: the base docker-compose.yml already uses bridge networking
+# with explicit port mapping on every platform.
+services:
+  gateway: {}

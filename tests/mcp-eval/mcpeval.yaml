@@ -1,0 +1,36 @@
+$schema: ../../../lastmile-ai-mcp-eval/schema/mcpeval.config.schema.json
+name: "postgres-mcp-universal safe MCP evals"
+description: >
+  Safe default eval profile for postgres-mcp-universal. These evals exercise
+  the Streamable HTTP MCP surface and safe lifecycle/discovery tools only.
+  They do not require LLM API keys, database credentials, SAP, NiFi, SSH, or
+  any real PostgreSQL target.
+
+mcp:
+  servers:
+    postgres_universal:
+      transport: "streamable_http"
+      url: "http://127.0.0.1:18090/mcp"
+
+default_agent: "safe_default"
+agents:
+  definitions:
+    - name: "safe_default"
+      instruction: |
+        You are a safety-focused evaluator for postgres-mcp-universal.
+        Always discover registered databases and server status before taking
+        database actions. Never invent database names, hosts, credentials,
+        SAP systems, NiFi endpoints, SSH targets, or PostgreSQL schemas.
+        If a backend is unavailable or not registered, report that explicitly.
+      server_names: ["postgres_universal"]
+      max_iterations: 1
+
+reporting:
+  formats: ["json", "markdown"]
+  output_dir: "./test-reports/mcp-eval"
+  include_traces: true
+
+execution:
+  max_concurrency: 1
+  timeout_seconds: 60
+  retry_failed: false

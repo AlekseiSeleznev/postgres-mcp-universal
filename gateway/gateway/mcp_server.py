@@ -7,6 +7,7 @@ import logging
 
 from mcp.server import Server
 from mcp.types import (
+    CallToolResult,
     GetPromptResult,
     Prompt,
     PromptArgument,
@@ -177,23 +178,25 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
 
     mod = _TOOL_DISPATCH.get(name)
     if not mod:
-        # MCP spec: unknown tool is an error — return isError=True
-        from mcp.types import CallToolResult
-        return CallToolResult(
-            isError=True,
-            content=[TextContent(type="text", text=f"Unknown tool: {name}")],
-        )
+        # Server.call_tool() wraps raised exceptions into CallToolResult(isError=True).
+        # Returning CallToolResult directly from this decorated handler is not
+        # compatible with all MCP clients because the low-level SDK expects an
+        # iterable of content items and wraps it itself.
+        raise ValueError(f"Unknown tool: {name}")
 
     try:
-        return await mod.handle(name, arguments, session_id=session_id)
+        result = await mod.handle(name, arguments, session_id=session_id)
+        if isinstance(result, CallToolResult):
+            text = "\n".join(
+                part.text for part in result.content if hasattr(part, "text")
+            )
+            if result.isError:
+                raise RuntimeError(text or f"Error in {name}")
+            return result.content
+        return result
     except Exception as e:
         log.exception("Tool %s failed", name)
-        # MCP spec §2.4: tool errors should set isError=True
-        from mcp.types import CallToolResult
-        return CallToolResult(
-            isError=True,
-            content=[TextContent(type="text", text=f"Error in {name}: {e}")],
-        )
+        raise RuntimeError(f"Error in {name}: {e}") from e
 
 
 # ---------------------------------------------------------------------------

@@ -104,13 +104,9 @@ class TestCallTool:
     @pytest.mark.asyncio
     async def test_unknown_tool_returns_error_text(self):
         from gateway.mcp_server import call_tool
-        from mcp.types import CallToolResult
 
-        result = await call_tool("nonexistent_tool", {})
-        # Per MCP spec, unknown tool returns CallToolResult with isError=True
-        assert isinstance(result, CallToolResult)
-        assert result.isError is True
-        assert "Unknown tool" in result.content[0].text
+        with pytest.raises(ValueError, match="Unknown tool"):
+            await call_tool("nonexistent_tool", {})
 
     @pytest.mark.asyncio
     async def test_call_tool_dispatches_to_correct_module(self):
@@ -130,18 +126,12 @@ class TestCallTool:
     async def test_call_tool_catches_exceptions(self):
         from gateway.mcp_server import call_tool
         from gateway import mcp_server
-        from mcp.types import CallToolResult
 
         mock_handle = AsyncMock(side_effect=RuntimeError("DB connection failed"))
 
         with patch.dict(mcp_server._TOOL_DISPATCH, {"execute_sql": MagicMock(handle=mock_handle)}):
-            result = await call_tool("execute_sql", {"query": "SELECT 1"})
-
-        # Per MCP spec: exceptions should return CallToolResult with isError=True
-        assert isinstance(result, CallToolResult)
-        assert result.isError is True
-        assert "Error in execute_sql" in result.content[0].text
-        assert "DB connection failed" in result.content[0].text
+            with pytest.raises(RuntimeError, match="DB connection failed"):
+                await call_tool("execute_sql", {"query": "SELECT 1"})
 
     @pytest.mark.asyncio
     async def test_call_tool_passes_session_id(self):

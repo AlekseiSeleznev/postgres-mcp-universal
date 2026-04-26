@@ -261,28 +261,22 @@ class TestUriSanitization:
 # ── MCP Error Format Tests ────────────────────────────────────────────
 
 class TestMcpErrorFormat:
-    """Verify MCP errors follow the spec (isError=True in CallToolResult)."""
+    """Verify direct tool dispatcher raises errors for the MCP SDK wrapper."""
 
     @pytest.mark.asyncio
     async def test_unknown_tool_returns_call_tool_result_with_is_error(self):
         from gateway.mcp_server import call_tool
-        from mcp.types import CallToolResult
 
-        result = await call_tool("nonexistent_tool", {})
-        assert isinstance(result, CallToolResult)
-        assert result.isError is True
+        with pytest.raises(ValueError, match="Unknown tool"):
+            await call_tool("nonexistent_tool", {})
 
     @pytest.mark.asyncio
     async def test_exception_returns_call_tool_result_with_is_error(self):
         from gateway.mcp_server import call_tool
         from gateway import mcp_server
-        from mcp.types import CallToolResult
 
         mock_handle = AsyncMock(side_effect=RuntimeError("DB error"))
 
         with patch.dict(mcp_server._TOOL_DISPATCH, {"execute_sql": MagicMock(handle=mock_handle)}):
-            result = await call_tool("execute_sql", {})
-
-        assert isinstance(result, CallToolResult)
-        assert result.isError is True
-        assert "DB error" in result.content[0].text
+            with pytest.raises(RuntimeError, match="DB error"):
+                await call_tool("execute_sql", {})

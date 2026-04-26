@@ -1,0 +1,34 @@
+$schema: ../../../lastmile-ai-mcp-eval/schema/mcpeval.config.schema.json
+name: "postgres-mcp-universal integration MCP evals"
+description: >
+  Gated integration profile for environments with a real registered
+  PostgreSQL backend. Run only when PG_MCP_EVAL_INTEGRATION=1 and
+  PG_MCP_EVAL_DATABASE names a connected database in postgres-mcp-universal.
+
+mcp:
+  servers:
+    postgres_universal:
+      transport: "streamable_http"
+      url: "http://localhost:8090/mcp"
+
+default_agent: "integration_readonly"
+agents:
+  definitions:
+    - name: "integration_readonly"
+      instruction: |
+        You are a read-only integration evaluator. Use list_databases and
+        get_server_status first, switch only to PG_MCP_EVAL_DATABASE, and
+        use metadata/list tools. Do not execute DDL or DML.
+      server_names: ["postgres_universal"]
+      max_iterations: 1
+
+reporting:
+  formats: ["json", "markdown"]
+  output_dir: "./test-reports/mcp-eval-integration"
+  include_traces: true
+
+execution:
+  max_concurrency: 1
+  timeout_seconds: 60
+  retry_failed: false
+

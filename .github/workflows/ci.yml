@@ -51,6 +51,12 @@ jobs:
         run: |
           ./tools/ci-smoke.ps1
 
+      - name: PowerShell MCP smoke (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          ./tests/smoke/mcp-smoke.ps1
+
   fresh-install-smoke:
     strategy:
       fail-fast: false

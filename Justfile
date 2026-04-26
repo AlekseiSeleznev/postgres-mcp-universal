@@ -8,7 +8,7 @@ default_mcp_url := "http://localhost:8090/mcp"
 default_health_url := "http://localhost:8090/health"
 
 default:
-    @echo "Available: test, health, mcp-init, mcp-tools-list, mcp-conformance, mcp-inspector-tools, mcp-eval, mcp-eval-integration, pwsh-version, smoke"
+    @echo "Available: test, health, mcp-init, mcp-tools-list, mcp-conformance, mcp-inspector-tools, mcp-eval, mcp-eval-integration, pwsh-version, pwsh-smoke, smoke"
 
 test:
     cd gateway && { command -v python >/dev/null 2>&1 && python -m pytest tests -q || python3 -m pytest tests -q; }
@@ -82,5 +82,8 @@ mcp-eval-integration path="tests/mcp-eval-integration":
 
 pwsh-version:
     @"{{pwsh}}" -NoLogo -NoProfile -Command '$PSVersionTable.PSVersion.ToString()'
+
+pwsh-smoke:
+    @"{{pwsh}}" -NoLogo -NoProfile -File tests/smoke/mcp-smoke.ps1
 
 smoke: health mcp-conformance
